@@ -163,6 +163,9 @@
       "NMIBC_class" = "aquamarine3",
       "consensusClass" = "steelblue3")
   
+  globals$system_levels <-
+    c("clust_id", "NMIBC_class", "consensusClass")
+  
   globals$system_labels <-
     c("clust_id" = "bladder cancer clusters",
       "NMIBC_class" = "UROMOL NMIBC classes",
@@ -182,9 +185,10 @@
       "LumU" = "darkgoldenrod4",
       "Stroma-rich" = "chartreuse4",
       "Ba/Sq" = "dodgerblue3",
-      "NE-like" = "plum4",
-      "ND" = "gray60", 
-      "not assigned" = "gray60")
+      "NE-like" = "plum4")
+  
+  globals$consensus_levels <- 
+    c("LumP", "LumNS", "LumU", "Stroma-rich", "Ba/Sq", "NE-like")
   
   globals$uromol_colors <-
     c("1" = "aquamarine4", 
@@ -203,5 +207,14 @@
   
   globals$regulation_levels <- 
     c("upregulated", "downregulated", "ns")
+  
+# vertex attributes for similarity networks --------
+  
+  globals$attr_df <- 
+    map2_dfr(globals[c("cluster_levels", "uromol_levels", "consensus_levels")], 
+             globals$system_levels, 
+             ~tibble(name = .x, 
+                     system = .y)) %>% 
+    mutate(system = factor(system, globals$system_levels))
   
 # END ---------

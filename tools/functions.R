@@ -98,5 +98,75 @@
     
   }
   
+  find_overlaps <- function(x, 
+                            pairs, 
+                            regulation_levels = globals$regulation_levels) {
+    
+    ## extracts shared features from a list of character vectors (x), 
+    ## the overlaps to check are defined by pairs: a list with vectors of 
+    ## names of elements in x
+    
+    ## pair names and identifiers
+    
+    pair_names <- map(pairs, paste, collapse = "|")
+    
+    pairs <- set_names(pairs, pair_names)
+    
+    pair_df <- map(pairs, 
+                   ~tibble(element1 = .x[[1]], 
+                           element2 = .x[[2]]))
+    
+    pair_df <- compress(pair_df, names_to = "pair_id")
+    
+    ## overlaps
+    
+    res <- map(pairs, ~x[.x])
+    
+    res <- map(res, reduce, intersect)
+    
+    res <- map(res, 
+               ~tibble(feature = .x))
+    
+    res <- compress(res, names_to = "pair_id")
+    
+    res <- left_join(res, pair_df, by = "pair_id")
+    
+    res <- mutate(res, 
+                  variable = stri_split_fixed(feature, 
+                                              pattern = "|", 
+                                              simplify = TRUE)[, 1], 
+                  regulation = stri_split_fixed(feature, 
+                                                pattern = "|", 
+                                                simplify = TRUE)[, 2], 
+                  regulation = factor(regulation, regulation_levels))
+    
+    return(res)
+    
+  }
+  
+# General utilities --------
+  
+  mtx2long <- function(x, 
+                       row_var = "variable1", 
+                       col_var = "variable2", 
+                       value_var = "value") {
+    
+    ## converts a matrix to long-format data frame: 
+    ## variable 1: factors in rows, 
+    ## variable 2: factors in columns
+    
+    x <- as.data.frame(x)
+    
+    cols_names <- colnames(x)
+    
+    x <- rownames_to_column(x, row_var)
+    
+    pivot_longer(x, 
+                 cols = all_of(cols_names), 
+                 names_to = col_var, 
+                 values_to = value_var)
+    
+  }
+  
   
 # END --------
