@@ -1,0 +1,53 @@
+# Analyses for bladder cancer clusters and UROMOL classes in NMIBC cohorts 
+# (GSE13507, GSE32548, GSE86411, GSE128959, E-MTAB-4321). 
+#
+# 1) Differential gene expression in bladder cancer clusters as compared with 
+# the cohort average. One-way ANOVA and one-sample post-hoc T test. 
+# Significant effects: pFDR ANOVA < 0.05, eta-square >= 0.06, pFDR T test < 0.05.
+#
+# 2) Differential gene expression in UROMOL classes as compared with 
+# the cohort average. One-way ANOVA and one-sample post-hoc T test. 
+# Significant effects: pFDR ANOVA < 0.05, eta-square >= 0.06, pFDR T test < 0.05.
+
+# tools ---------
+  
+  library(tidyverse)
+  library(trafo)
+  library(rlang)
+  library(stringi)
+  
+  library(microViz)
+  library(fastTest)
+  
+  library(soucer)
+
+  insert_head()
+  
+  c("./tools/globals.R", 
+    "./tools/functions.R") %>% 
+    source_all(message = TRUE, crash = TRUE)
+
+# analysis scripts --------
+  
+  insert_msg("Analysis scripts")
+  
+  ## cached results of differential expression analyses
+  
+  list(cache_path = c("./cache/nmibc_bc.RData", 
+                      "./cache/nmibc_uro.RData"), 
+       script_path = c("./NMIBC scripts/bc_dge.R", 
+                       "./NMIBC scripts/uromol_dge.R"), 
+       message = paste("Cached", 
+                       c("DGE analysis results for bladder cancer clusters", 
+                         "DGE analysis results for UROMOL classes"))) %>% 
+    pwalk(access_cache)
+  
+  ## similarity and dissimilarity of the bladder cancer clusters 
+  ## and UROMOL classes
+
+  
+  
+  
+# END --------
+  
+  insert_tail()
