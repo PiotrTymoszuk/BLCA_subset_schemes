@@ -56,16 +56,8 @@
   ## formatting the test results, significant differences 
   ## between the clusters
   
-  nmibc_bc$anova <- 
-    ## anntotation with Entrez ID
-    map2(nmibc_bc$anova, 
-         nmibc_bc$annotation, 
-         left_join, by = "variable") %>% 
-    ## significant effects
-    map(mutate, 
-        regulation = ifelse(p_adjusted < 0.05 & etasq >= 0.06, 
-                            "regulated", "ns"), 
-        regulation = factor(regulation, c("regulated", "ns")))
+  nmibc_bc$anova <- nmibc_bc[c("anova", "annotation")] %>% 
+    pmap(format_anova)
   
   nmibc_bc$anova_significant <- nmibc_bc$anova %>% 
     map(filter, regulation == "regulated") %>% 
@@ -81,26 +73,9 @@
   
   ## formatting the testing results
   
-  nmibc_bc$test <-
-    ## annotation with Entrez ID
-    map2(nmibc_bc$test, 
-         nmibc_bc$annotation, 
-         left_join, 
-         by = "variable") %>% 
-    ## significant effects in ANOVA
-    map2(nmibc_bc$anova_significant, 
-         ~mutate(.x, 
-                 anova_significant = ifelse(variable %in% .y, 
-                                            "yes", "no"), 
-                 anova_significant = factor(anova_significant, c("no", "yes")))) %>% 
-    ## significant differences vs cohort average
-    map(mutate, 
-        regulation = ifelse(anova_significant == "no" | p_adjusted >= 0.05, 
-                           "ns", 
-                           ifelse(deviation_center > 0, 
-                                  "upregulated", 
-                                  "downregulated")), 
-        regulation = factor(regulation, globals$regulation_levels))
+  nmibc_bc$test <- 
+    nmibc_bc[c("test", "annotation", "anova_significant")] %>% 
+    pmap(format_posthoc)
   
 # Significant effects ---------
   
@@ -109,14 +84,7 @@
   ## in single cohorts
   
   nmibc_bc$significant <- nmibc_bc$test %>% 
-    map(filter, regulation %in% c("upregulated", "downregulated")) %>% 
-    map(function(x) if(nrow(x) == 0) NULL else x) %>% 
-    compact %>% 
-    map(blast, clust_id) %>% 
-    transpose %>% 
-    map(map, blast, regulation) %>% 
-    map(transpose) %>% 
-    map(map, map, ~.$variable)
+    find_significant(split_fct = "clust_id")
   
   ## shared by at least three cohorts
   
@@ -131,26 +99,14 @@
   ## in single cohorts
   
   nmibc_bc$numbers$cohorts <- nmibc_bc$test %>% 
-    map(count, clust_id, regulation) %>% 
-    map(group_by, clust_id) %>% 
-    map(mutate, 
-        n_total = sum(n), 
-        percent = n/n_total * 100) %>% 
-    map(ungroup) %>% 
-    map(filter, regulation %in% c("upregulated", "downregulated")) %>% 
-    compress(names_to = "cohort")
+    count_significant(split_fct = "clust_id")
   
   ## shared significant effects
   
   nmibc_bc$numbers$common <- nmibc_bc$cmm_significant %>% 
-    map(map_dbl, length) %>% 
-    map(compress, names_to = "regulation", values_to = "n") %>% 
-    compress(names_to = "clust_id") %>% 
-    mutate(cohort = "common", 
-           clust_id = factor(clust_id, globals$cluster_levels), 
-           regulation = factor(regulation, globals$regulation_levels), 
-           n_total = length(reduce(nmibc_bc$variables, union)), 
-           percent = n/n_total * 100)
+    count_cmm_significant(split_fct = "clust_id", 
+                          universe = reduce(nmibc_bc$variables, union), 
+                          split_levels = globals$cluster_levels)
   
   nmibc_bc$numbers <- nmibc_bc$numbers %>% 
     reduce(rbind)
