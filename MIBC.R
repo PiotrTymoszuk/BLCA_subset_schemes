@@ -1,11 +1,11 @@
-# Analyses for bladder cancer clusters and UROMOL classes in NMIBC cohorts 
-# (GSE13507, GSE32548, GSE86411, GSE128959, E-MTAB-4321). 
+# Analyses for bladder cancer clusters and consensus classes in NMIBC cohorts 
+# (TCGA BLCA, IMvigor, GSE83586, GSE87304, GSE128192, GSE203149). 
 #
 # 1) Differential gene expression in bladder cancer clusters as compared with 
 # the cohort average. One-way ANOVA and one-sample post-hoc T test. 
 # Significant effects: pFDR ANOVA < 0.05, eta-square >= 0.06, pFDR T test < 0.05.
 #
-# 2) Differential gene expression in UROMOL classes as compared with 
+# 2) Differential gene expression in consensus classes as compared with 
 # the cohort average. One-way ANOVA and one-sample post-hoc T test. 
 # Significant effects: pFDR ANOVA < 0.05, eta-square >= 0.06, pFDR T test < 0.05.
 #
@@ -47,7 +47,7 @@
   
   insert_msg("Analysis globals")
   
-  c("./NMIBC scripts/globals.R") %>% 
+  c("./MIBC scripts/globals.R") %>% 
     source_all(message = TRUE, crash = TRUE)
 
 # analysis scripts --------
@@ -58,15 +58,15 @@
   ## similarity and dissimilarity of the bladder cancer clusters 
   ## and UROMOL classes
   
-  list(cache_path = c("./cache/nmibc_bc.RData", 
-                      "./cache/nmibc_uro.RData", 
-                      "./cache/nmibc_shared.RData"), 
-       script_path = c("./NMIBC scripts/bc_dge.R", 
-                       "./NMIBC scripts/uromol_dge.R", 
-                       "./NMIBC scripts/shared_dge.R"), 
+  list(cache_path = c("./cache/mibc_bc.RData", 
+                      "./cache/mibc_cons.RData", 
+                      "./cache/mibc_shared.RData"), 
+       script_path = c("./MIBC scripts/bc_dge.R", 
+                       "./MIBC scripts/consensus_dge.R", 
+                       "./MIBC scripts/shared_dge.R"), 
        message = paste("Cached", 
                        c("DGE analysis results for bladder cancer clusters", 
-                         "DGE analysis results for UROMOL classes", 
+                         "DGE analysis results for consensus classes", 
                          "overlaps of differentially regulated genes"))) %>% 
     pwalk(access_cache)
   

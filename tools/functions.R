@@ -56,6 +56,7 @@
       compact %>% 
       map(blast, all_of(split_fct)) %>% 
       transpose %>% 
+      map(compact) %>% 
       map(map, blast, regulation) %>% 
       map(transpose) %>% 
       map(map, map, ~.$variable)
