@@ -12,6 +12,9 @@
 # pFDR < 0.05, and OR < 0.05.
 #
 # 4) Construction of a weighted similarity graph with Jaccard similarities.
+#
+# 5) Labels for the ovelaps with key biological processes derived from 
+# the GO enrichment analyses
 
   insert_head()
   
@@ -171,22 +174,96 @@
     map(blast, regulation) %>% 
     map(map, ~.x$term)
   
+# labels for the overlaps between the subset schemes based on the GO enrichment -------
+  
+  insert_head("Labels for overlaps")
+  
+  nmibc_shared$shared_labels <- 
+    list(`bc.#1|uromol.2b.upregulated` = c("antigens, IL, TNF", 
+                                           "B, T, NK cells, leukocytes", 
+                                           "membrane organization", 
+                                           "migration, phagocytosis",
+                                           "angiogenesis", 
+                                           "cell death, ECM, integrins", 
+                                           "IFN/STAT, FcR, PI3K", 
+                                           "VEGF, small GTPases", 
+                                           "GPCR, PLC", 
+                                           "WNT, MAPK, FGFR, NFkB", 
+                                           "eicosanoids, Ca2+"), 
+         `bc.#2|uromol.2b.upregulated` = c("antigens, IL", 
+                                           "B, T, NK cells & leukocytes", 
+                                           "migration, phagocytosis", 
+                                           "cell death, angiogenesis", 
+                                           "IFN/STAT, FcR, NFkB", 
+                                           "GPCR, PLC, MAPK", 
+                                           "small GTPases"), 
+         `bc.#2|uromol.2b.downregulated` = c("miRNA"), 
+         `bc.#3|uromol.1.downregulated` = c("bone & organ devlopment", 
+                                            "epithelial differentiation", 
+                                            "adhesion, migration, EMT", 
+                                            "angiogenesis, cell death", 
+                                            "WNT, BMP, chemokines", 
+                                            "MAPK, small GTPases", 
+                                            "TNF, IL"), 
+         `bc.#3|uromol.2a.downregulated` = c("B, T, NK cells", 
+                                             "cell death", 
+                                             "ECM, collagens", 
+                                             "IFN, IL, TLR, TNF", 
+                                             "small GTPases, MAPK", 
+                                             "Ca2+ signaling"), 
+         `bc.#3|uromol.3.downregulated` = c("antigens, lectins", 
+                                            "B, T, NK cells", 
+                                            "chemotaxis, membrane", 
+                                            "angiogenesis, cell death",
+                                            "ECM, collagens", 
+                                            "eicosanoids, vit. D", 
+                                            "FcR, IFN/STAT, IL, TLR", 
+                                            "WNT, NFkB, MAPK, PI3K", 
+                                            "GPCR, PLC, small GTPases", 
+                                            "Ca2+ & synaptic signaling")) %>% 
+    map_chr(paste, collapse = "\n")
+  
+  
+  
 # Weighted similarity graph ---------
   
   insert_msg("Weighted similarity graph")
 
   ## data frame defining the vertices, edges, and edge attributes
   ## the edges are weighted with J similarity coefficients and take 
-  ## the numbers of up- and downregulated genes as attributes
+  ## the numbers of up- and downregulated genes, 
+  ## and labels of the gene overlaps with GO enrichment summaries as attributes
+  
+  ## edge definitions and weights
   
   nmibc_shared$graph_data$edges <- nmibc_shared$simil_test %>% 
     mutate(weight = j + 1e-6)
+  
+  ## gene number attributes of the edges
   
   nmibc_shared$graph_data$gene_numbers <- nmibc_shared$numbers %>% 
     select(pair_id, regulation, n) %>% 
     pivot_wider(id_cols = pair_id, 
                 names_from = regulation, 
                 values_from = n)
+  
+  ## overlap labels
+  
+  nmibc_shared$graph_data$labels <- nmibc_shared$shared_labels %>% 
+    compress(names_to = "condition", 
+             values_to = "label") %>% 
+    mutate(regulation = stri_extract(condition, 
+                                     regex = "upregulated|downregulated"), 
+           regulation = paste0("label_", regulation), 
+           pair_id = stri_replace(condition, 
+                                  regex = "\\.(upregulated|downregulated)", 
+                                  replacement = "")) %>% 
+    select(-condition) %>% 
+    pivot_wider(id_cols = pair_id, 
+                names_from = regulation, 
+                values_from = label)
+  
+  ## the whole definition
   
   nmibc_shared$graph_data <- nmibc_shared$graph_data %>% 
     reduce(left_join, by = "pair_id") %>% 
@@ -196,7 +273,7 @@
            edge_lab = paste(edge_lab, upregulated, sep = "\nup: n = "), 
            edge_lab = paste(edge_lab, downregulated, sep = "\ndown: n = "), 
            edge_lab = ifelse(j == 0, NA, edge_lab))
-
+  
   ## the graph, setting the vertex attributes
   
   nmibc_shared$simil_graph <- nmibc_shared$graph_data %>% 
@@ -209,7 +286,8 @@
   
   nmibc_shared <- 
     nmibc_shared[c("simil_test", "shared_features", "numbers", 
-                   "go_test", "go_significant", "simil_graph")]
+                   "go_test", "go_significant", "simil_graph", 
+                   "shared_labels")]
   
   save(nmibc_shared, file = "./cache/nmibc_shared.RData")
   

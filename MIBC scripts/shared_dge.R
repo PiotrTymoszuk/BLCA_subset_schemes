@@ -178,22 +178,129 @@
     map(blast, regulation) %>% 
     map(map, ~.x$term)
   
+# labels for the overlaps between the subset schemes based on the GO enrichment -------
+  
+  insert_head("Labels for overlaps")
+  
+  mibc_shared$shared_labels <- 
+    list(`bc.#1|consensus.Ba/Sq.downregulated` = c("biological process"), 
+         `bc.#1|consensus.Ba/Sq.upregulated` = c("B & myeloid leukocytes", 
+                                                 "phagocytosis, chemotaxis"), 
+         `bc.#1|consensus.LumNS.downregulated` = c("epidermis, keratinocytes", 
+                                                   "proteolysis"), 
+         `bc.#1|consensus.LumNS.upregulated` = c("bones, muscles", 
+                                                 "angiogenesis", 
+                                                 "ECM, collagens", 
+                                                 "MAPK, PI3K, IL1"), 
+         `bc.#1|consensus.LumP.downregulated` = c("epidermis, keratinocytes"), 
+         `bc.#1|consensus.LumU.downregulated` = c("epidermis, keratinocytes", 
+                                                  "proteolysis"), 
+         `bc.#1|consensus.NE-like.downregulated` = c("epithelium", 
+                                                     "steroids"), 
+         `bc.#1|consensus.Stroma-rich.downregulated` = c("epidermis, keratinocytes", 
+                                                         "epithelium, adhesion"), 
+         `bc.#1|consensus.Stroma-rich.upregulated` = c("EMT, organ development", 
+                                                       "angiogenesis, migration", 
+                                                       "ECM, collagens, integrins", 
+                                                       "eicosanoids, retinoids", 
+                                                       "TGFB, BMP, WNT, IL1", 
+                                                       "PDGF, FGFR, MAPK, PI3K,", 
+                                                       "small GTPases, TNF", 
+                                                       "PLC, Ca2+ signaling"), 
+         `bc.#2|consensus.Ba/Sq.downregulated` = c("EMT, organ development", 
+                                                   "angiogenesis", 
+                                                   "FAOX, lipids, steroids", 
+                                                   "amines, retinoids, sugars", 
+                                                   "TGFB, BMP, SMAD", 
+                                                   "WNT, small GTPases"), 
+         `bc.#2|consensus.Ba/Sq.upregulated` = c("epidermis, keratinocytes", 
+                                                 "ECM, membranes", 
+                                                 "DNA replication & damage", 
+                                                 "cell cycle, cell death", 
+                                                 "NK & T cells, leukocytes", 
+                                                 "nucleotide metabolism", 
+                                                 "glycolysis", 
+                                                 "IFN/STAT, IL, TLR, NFkB", 
+                                                 "EGFR/ERBB, MAPK"), 
+         `bc.#2|consensus.NE-like.downregulated` = c("lipids, retinoids"),
+         `bc.#2|consensus.NE-like.upregulated` = c("mitosis, cell cycle", 
+                                                   "DNA replication & damage", 
+                                                   "cell death"), 
+         `bc.#2|consensus.Stroma-rich.downregulated` = c("vesicle transport"), 
+         `bc.#2|consensus.Stroma-rich.upregulated` = c("organ development", 
+                                                       "fibroblasts, migration", 
+                                                       "ECM, collagens", 
+                                                       "WNT, TGFB, BMP, SMAD", 
+                                                       "MAPK, PI3K, small GTPases"), 
+         `bc.#3|consensus.LumNS.downregulated` = c("epidermis, keratinocytes", 
+                                                   "organ development", 
+                                                   "cytokines, proteolysis", 
+                                                   "ECM, collagens"), 
+         `bc.#3|consensus.LumNS.upregulated` = c("lipids, steroids", 
+                                                 "ion homeostasis"), 
+         `bc.#3|consensus.LumP.downregulated` = c("epidermis, keratinocytes", 
+                                                  "B, T & NK cells, leukocytes", 
+                                                  "EMT, organs, angiogenesis", 
+                                                  "chemokines, migration", 
+                                                  "ECM, collagens, integrins", 
+                                                  "IFN/STAT, IL, TNF, TLR", 
+                                                  "NFkB, FcR, MAPK, PI3K", 
+                                                  "WNT, BMP, PDGFR, VEGF", 
+                                                  "GPCR, small GTPases"), 
+         `bc.#3|consensus.LumP.upregulated` = c("epithelial development", 
+                                                "fatty acid metabolism", 
+                                                "FAOX, lipid metabolism", 
+                                                "eicosanoids, steroids", 
+                                                "retinoids, xenobiotics", 
+                                                "amines, amino acids", 
+                                                "ERBB, MAPK, small GTPases", 
+                                                "WNT, NOTCH, LIF, BMP"), 
+         `bc.#3|consensus.LumU.downregulated` = c("epidermis, keratinocytes", 
+                                                  "ECM, MAPK"), 
+         `bc.#3|consensus.LumU.upregulated` = c("biological process"), 
+         `bc.#3|consensus.Stroma-rich.downregulated` = c("epidermis, keratinocytes", 
+                                                         "proteolysis")) %>% 
+    map_chr(paste, collapse = "\n")
+  
 # Weighted similarity graph ---------
   
   insert_msg("Weighted similarity graph")
 
   ## data frame defining the vertices, edges, and edge attributes
   ## the edges are weighted with J similarity coefficients and take 
-  ## the numbers of up- and downregulated genes as attributes
+  ## the numbers of up- and downregulated genes, 
+  ## and labels of the gene overlaps with GO enrichment summaries as attributes
+  
+  ## edge definitions and weights
   
   mibc_shared$graph_data$edges <- mibc_shared$simil_test %>% 
     mutate(weight = j + 1e-6)
+  
+  ## gene number attributes
   
   mibc_shared$graph_data$gene_numbers <- mibc_shared$numbers %>% 
     select(pair_id, regulation, n) %>% 
     pivot_wider(id_cols = pair_id, 
                 names_from = regulation, 
                 values_from = n)
+  
+  ## overlap labels
+  
+  mibc_shared$graph_data$labels <- mibc_shared$shared_labels %>% 
+    compress(names_to = "condition", 
+             values_to = "label") %>% 
+    mutate(regulation = stri_extract(condition, 
+                                     regex = "upregulated|downregulated"), 
+           regulation = paste0("label_", regulation), 
+           pair_id = stri_replace(condition, 
+                                  regex = "\\.(upregulated|downregulated)", 
+                                  replacement = "")) %>% 
+    select(-condition) %>% 
+    pivot_wider(id_cols = pair_id, 
+                names_from = regulation, 
+                values_from = label)
+  
+  ## the whole graph definition
   
   mibc_shared$graph_data <- mibc_shared$graph_data %>% 
     reduce(left_join, by = "pair_id") %>% 
@@ -216,7 +323,8 @@
   
   mibc_shared <- 
     mibc_shared[c("simil_test", "shared_features", "numbers", 
-                   "go_test", "go_significant", "simil_graph")]
+                  "go_test", "go_significant", "simil_graph", 
+                  "shared_labels")]
   
   save(mibc_shared, file = "./cache/mibc_shared.RData")
   
