@@ -198,5 +198,22 @@
     
   }
   
+  pad_missing <- function(x, variables, value = NA_real_) {
+    
+    missing_vars <- setdiff(variables, names(x))
+    
+    if(length(missing_vars) == 0) return(x)
+    
+    for(i in missing_vars) {
+      
+      x[[i]] <- value
+      
+    }
+    
+    return(x)
+    
+  }
+  
+  
   
 # END --------
