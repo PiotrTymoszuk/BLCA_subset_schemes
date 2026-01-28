@@ -120,6 +120,38 @@
     map(~.x$variable) %>% 
     set_similarity(method = "jaccard")
   
+# Markers of the clusters in single cohorts and shared ones --------
+  
+  insert_msg("Markers of the clusters")
+  
+  ## the markers selected among ANOVA-significant features 
+  ## with AUC >= 0.714
+  
+  nmibc_uro$roc <- nmibc_uro[c("data", "anova_significant")] %>% 
+    set_names(c("data", "variables")) %>% 
+    pmap(classify, 
+         split_fct = "NMIBC_class") %>% 
+    map(~.x$classification)
+  
+  nmibc_uro$roc <- nmibc_uro[c("roc", "annotation")] %>% 
+    pmap(format_roc)
+  
+  ## markers in single cohorts and shared by at least three cohorts
+  
+  nmibc_uro$markers <- nmibc_uro$roc %>% 
+    find_markers(split_fct = "NMIBC_class")
+  
+  nmibc_uro$cmm_markers <- nmibc_uro$markers %>% 
+    map(shared_features, m = 3) %>% 
+    map(as.character)
+  
+  ## top 100 markers shared by at least three cohorts
+  
+  nmibc_uro$cmm_top_markers <- nmibc_uro$markers %>% 
+    map(map, ~.x[1:100]) %>% 
+    map(shared_features, m = 3) %>% 
+    map(as.character)
+  
 # Caching -------
   
   insert_msg("Caching")
@@ -127,7 +159,8 @@
   nmibc_uro <- 
     nmibc_uro[c("stats", "anova", "test", 
                "significant", "cmm_significant", 
-               "numbers", "cohort_simil")]
+               "numbers", "cohort_simil", 
+               "roc", "markers", "cmm_markers", "cmm_top_markers")]
   
   save(nmibc_uro, file = "./cache/nmibc_uro.RData")
   

@@ -36,6 +36,14 @@
     list(mibc_bc, mibc_cons) %>% 
     map(~.x$cmm_significant)
   
+  ## top 100 markers of bladder cancer clusters and consensus classes
+  ## shared by at least three cohorts
+  
+  mibc_shared$markers <- 
+    list(bc = mibc_bc, consensus = mibc_cons) %>% 
+    map(~.x$cmm_top_markers) %>% 
+    unlist(recursive = FALSE)
+
   ## attributes for vertices of similarity graphs
   
   mibc_shared$attr_df <- globals$attr_df
@@ -262,6 +270,15 @@
                                                          "proteolysis")) %>% 
     map_chr(paste, collapse = "\n")
   
+# Identification of overlaps in cluster and consensus class markers ---------
+  
+  insert_msg("Identification of overlaps in markers")
+  
+  mibc_shared$shared_markers <- mibc_shared$markers %>% 
+    find_overlaps(pairs = mibc_shared$pairs, as_list = TRUE) %>% 
+    map(function(x) if(length(x) == 0) NULL else x) %>% 
+    compact
+
 # Weighted similarity graph ---------
   
   insert_msg("Weighted similarity graph")
@@ -269,7 +286,8 @@
   ## data frame defining the vertices, edges, and edge attributes
   ## the edges are weighted with J similarity coefficients and take 
   ## the numbers of up- and downregulated genes, 
-  ## and labels of the gene overlaps with GO enrichment summaries as attributes
+  ## labels of the gene overlaps with GO enrichment summaries, 
+  ## and overlapping marker genes as attributes
   
   ## edge definitions and weights
   
@@ -300,6 +318,14 @@
                 names_from = regulation, 
                 values_from = label)
   
+  ## overlapping markers
+  
+  mibc_shared$graph_data$markers <- mibc_shared$shared_markers %>% 
+    map(sort) %>% 
+    map_chr(paste, collapse = ", ") %>% 
+    compress(names_to = "pair_id", 
+             values_to = "marker_label")
+  
   ## the whole graph definition
   
   mibc_shared$graph_data <- mibc_shared$graph_data %>% 
@@ -323,8 +349,9 @@
   
   mibc_shared <- 
     mibc_shared[c("simil_test", "shared_features", "numbers", 
-                  "go_test", "go_significant", "simil_graph", 
-                  "shared_labels")]
+                  "go_test", "go_significant", 
+                  "shared_labels", "shared_markers", 
+                  "simil_graph")]
   
   save(mibc_shared, file = "./cache/mibc_shared.RData")
   

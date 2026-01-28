@@ -39,6 +39,13 @@
     list(nmibc_bc, nmibc_uro) %>% 
     map(~.x$cmm_significant)
   
+  ## common top markers of bladder cancer clusters and UROMOL classes
+  
+  nmibc_shared$markers <- 
+    list(bc = nmibc_bc, uromol = nmibc_uro) %>% 
+    map(~.x$cmm_top_markers) %>% 
+    unlist(recursive = FALSE)
+  
   ## attributes for vertices of similarity graphs
   
   nmibc_shared$attr_df <- globals$attr_df
@@ -223,7 +230,15 @@
                                             "Ca2+ & synaptic signaling")) %>% 
     map_chr(paste, collapse = "\n")
   
+# Identification of overlaps in cluster and UROMOL class markers ---------
   
+  insert_msg("Identification of overlaps in markers")
+  
+  nmibc_shared$shared_markers <- nmibc_shared$markers %>% 
+    find_overlaps(pairs = nmibc_shared$pairs, 
+                  as_list = TRUE) %>% 
+    map(function(x) if(length(x) == 0) NULL else x) %>% 
+    compact
   
 # Weighted similarity graph ---------
   
@@ -232,7 +247,8 @@
   ## data frame defining the vertices, edges, and edge attributes
   ## the edges are weighted with J similarity coefficients and take 
   ## the numbers of up- and downregulated genes, 
-  ## and labels of the gene overlaps with GO enrichment summaries as attributes
+  ## labels of the gene overlaps with GO enrichment summaries, 
+  ## and text with overlapping markers as attributes
   
   ## edge definitions and weights
   
@@ -263,6 +279,14 @@
                 names_from = regulation, 
                 values_from = label)
   
+  ## overlapping markers
+  
+  nmibc_shared$graph_data$markers <- nmibc_shared$shared_markers %>% 
+    map(sort) %>% 
+    map_chr(paste, collapse = ", ") %>% 
+    compress(names_to = "pair_id", 
+             values_to = "marker_label")
+  
   ## the whole definition
   
   nmibc_shared$graph_data <- nmibc_shared$graph_data %>% 
@@ -286,8 +310,9 @@
   
   nmibc_shared <- 
     nmibc_shared[c("simil_test", "shared_features", "numbers", 
-                   "go_test", "go_significant", "simil_graph", 
-                   "shared_labels")]
+                   "go_test", "go_significant", 
+                   "shared_labels", "shared_markers", 
+                   "simil_graph")]
   
   save(nmibc_shared, file = "./cache/nmibc_shared.RData")
   

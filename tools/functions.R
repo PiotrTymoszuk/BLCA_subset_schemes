@@ -46,6 +46,19 @@
     
   }
   
+  format_roc <- function(roc, annotation, auc_cutoff = 0.714) {
+    
+    ## consistent formatting of ROC testing for markers of molecular 
+    ## subsets
+    
+    roc %>% 
+      mutate(marker = ifelse(auc >= auc_cutoff, "yes", "no"), 
+             maker = factor(marker, c("yes", "no"))) %>% 
+      arrange(-auc) %>% 
+      left_join(annotation, by = "variable")
+    
+  }
+  
   find_significant <- function(test_lst, split_fct) {
     
     ## extracts significant effects from post-hoc test results in a list
@@ -60,6 +73,19 @@
       map(map, blast, regulation) %>% 
       map(transpose) %>% 
       map(map, map, ~.$variable)
+    
+  }
+  
+  find_markers <- function(roc_lst, split_fct) {
+    
+    ## extraction of markers of molecular subsets from 
+    ## a list with ROC analyses
+    
+    roc_lst %>% 
+      map(filter, marker == "yes") %>% 
+      map(blast, all_of(split_fct)) %>% 
+      transpose %>% 
+      map(map, ~.x$variable)
     
   }
   
@@ -101,6 +127,7 @@
   
   find_overlaps <- function(x, 
                             pairs, 
+                            as_list = FALSE, 
                             regulation_levels = globals$regulation_levels) {
     
     ## extracts shared features from a list of character vectors (x), 
@@ -124,6 +151,8 @@
     res <- map(pairs, ~x[.x])
     
     res <- map(res, reduce, intersect)
+    
+    if(as_list) return(res)
     
     res <- map(res, 
                ~tibble(feature = .x))
