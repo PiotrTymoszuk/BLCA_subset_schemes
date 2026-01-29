@@ -152,10 +152,10 @@
     map(shared_features, m = 3) %>% 
     map(as.character)
   
-  ## top 100 markers shared by at least three cohorts
+  ## top 50 markers shared by at least three cohorts
   
   mibc_cons$cmm_top_markers <- mibc_cons$markers %>% 
-    map(map, ~.x[1:100]) %>% 
+    map(map, ~.x[1:50]) %>% 
     map(shared_features, m = 3) %>% 
     map(as.character)
   

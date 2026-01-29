@@ -15,6 +15,9 @@
   library(igraph)
   library(graphExtra)
   library(ggnetwork)
+
+  library(ggtext)
+  library(figur)
   
   library(AnnotationDbi)
   library(org.Hs.eg.db)
@@ -36,7 +39,9 @@
   
   insert_msg("Analysis scripts")
   
-  c("./summary scripts/dge_plots.R") %>% 
+  c("./summary scripts/dge_plots.R", 
+    "./summary scripts/graph_plots.R", 
+    "./summary scripts/venn_plots.R") %>% 
     source_all(message = TRUE, crash = TRUE)
   
 # END -------

@@ -34,7 +34,7 @@
     map(~.x$shared_markers) %>% 
     map(unlist) %>% 
     map(unique)
-  
+
   ## assignment and splitting factors
   
   sum_deplots$assignment <- list(nmibc = ex_nmibc, 
@@ -49,6 +49,10 @@
     list(nmibc = globals$system_labels[c("clust_id", "NMIBC_class")], 
          mibc = globals$system_labels[c("clust_id", "consensusClass")])
   
+  sum_deplots$split_colors <- 
+    globals[c("cluster_colors", "uromol_colors", "consensus_colors")] %>% 
+    set_names(c("clust_id", "NMIBC_class", "consensusClass"))
+
   ## gene expression data
   
   sum_deplots$expression <- 
@@ -214,7 +218,59 @@
     
   }
   
+# Expression of the markers in single cohorts and molecular subsets ---------
+  
+  insert_msg("Box plots for single markers")
+  
+  ## done on request
+  
+  #for(i in names(sum_deplots$expression)) {
+    
+   # for(j in names(sum_deplots$expression[[i]])) {
+    #  
+     # temp_vars <- sum_deplots$markers[[i]] %>% 
+      #  intersect(names(sum_deplots$expression[[i]][[j]]))
+      #
+      #for(k in sum_deplots$split_fct[[i]]) {
+       # 
+        #sum_deplots$plots[[i]][[j]][[k]] <- 
+         # list(variable = temp_vars, 
+          #     plot_title = paste(html_italic(temp_vars), 
+           #                       globals$cohort_labs[j], 
+            #                      sep = ", ")) %>% 
+          #future_pmap(plot_variable, 
+           #           sum_deplots$expression[[i]][[j]], 
+            #          split_factor = k, 
+             #         type = "box", 
+              #        x_n_labs = TRUE, 
+               #       x_lab = sum_deplots$split_labels[[i]][[k]], 
+                #      y_lab = expression("log"[2] * " expression"), 
+                 #     cust_theme = globals$common_theme + 
+                  #      theme(plot.title = element_markdown()), 
+                   #   .options = furrr_options(seed = TRUE)) %>% 
+          #map(~.x + 
+           #     scale_fill_manual(values = sum_deplots$split_colors[[k]])) %>% 
+          #set_names(temp_vars)
+        
+      #}
+      
+    #}
+    
+  #}
+  
+  #sum_deplots$plots <- sum_deplots$plots %>% 
+#    map(map, transpose)
+  
 # END ---------
+
+  rm(temp_vars)
+  
+  sum_deplots$genes <- NULL
+  sum_deplots$markers <- NULL
+  sum_deplots$assignment <- NULL
+  sum_deplots$expression <- NULL
+
+  sum_deplots <- compact(sum_deplots)
   
   plan("sequential")
   

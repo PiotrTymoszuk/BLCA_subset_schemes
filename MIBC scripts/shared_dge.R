@@ -36,6 +36,20 @@
     list(mibc_bc, mibc_cons) %>% 
     map(~.x$cmm_significant)
   
+  ## numbers of common regulated genes 
+  
+  mibc_shared$total_numbers[c("bc", "consensus")] <- 
+    list(mibc_bc, mibc_cons) %>% 
+    map(~.x$numbers) %>% 
+    map(filter, cohort == "common") %>% 
+    map2(., c("n_clust_id", "n_consensusClass"), 
+         ~mutate(.x, 
+                 !!.y := n)) %>% 
+    map(select, 
+        regulation, 
+        any_of(c("clust_id", "consensusClass", 
+                 "n_clust_id", "n_consensusClass")))
+  
   ## top 100 markers of bladder cancer clusters and consensus classes
   ## shared by at least three cohorts
   
@@ -54,18 +68,26 @@
     map(~.x$entrez_id) %>% 
     reduce(union)
   
-# Jaccard distances --------
+  ## pairs of molecular subsets
   
-  insert_msg("Jaccard distances")
+  mibc_shared$pairs <- paste0("consensus.", globals$consensus_levels) %>% 
+    map(function(x) paste0("bc.", globals$cluster_levels) %>% 
+          map(~c(.x, x))) %>% 
+    unlist(recursive = FALSE)
   
-  ## input data: vectors of simplified gene regulation information: 
-  ## the upregulate and downregulated features are appended with suffixes
+  ## input data: 
+  ## vectors of simplified gene regulation information: 
+  ## the upregulated and downregulated features are appended with suffixes
   
   mibc_shared$simil_data <- mibc_shared$genes %>% 
     map(map, ~map2(.x, names(.x), paste, sep = "|")) %>% 
     map(map, reduce, union) %>% 
     unlist(recursive = FALSE)
   
+# Jaccard distances --------
+  
+  insert_msg("Jaccard distances")
+
   ## Jaccard distances
   
   mibc_shared$simil_test <- mibc_shared$simil_data %>% 
@@ -104,14 +126,7 @@
 # Identification of shared differentially regulated genes ---------
   
   insert_msg("Identification of shared regulated genes")
-  
-  ## pairs of molecular subsets
-  
-  mibc_shared$pairs <- paste0("consensus.", globals$consensus_levels) %>% 
-    map(function(x) paste0("bc.", globals$cluster_levels) %>% 
-          map(~c(.x, x))) %>% 
-    unlist(recursive = FALSE)
-  
+
   ## common regulated features, appended with Entrez IDs
 
   mibc_shared$shared_features <- 
@@ -137,10 +152,19 @@
   
   insert_msg("Numbers of genes in the intersections")
   
+  ## intersections
+  
   mibc_shared$numbers <- mibc_shared$shared_features %>% 
     count(pair_id, regulation) %>% 
     left_join(mibc_shared$pair_df, by = "pair_id")
   
+  ## appending with numbers of all genes regulated in particular 
+  ## molecular subsets
+  
+  mibc_shared$numbers <- c(mibc_shared["numbers"], 
+                           mibc_shared$total_numbers) %>% 
+    reduce(left_join)
+
 # GO enrichment analyses for the overlaps with at least 10 genes ----------
   
   insert_msg("GO enrichment analyses for the overlaps")
@@ -322,6 +346,7 @@
   
   mibc_shared$graph_data$markers <- mibc_shared$shared_markers %>% 
     map(sort) %>% 
+    map(wrap_vector) %>% 
     map_chr(paste, collapse = ", ") %>% 
     compress(names_to = "pair_id", 
              values_to = "marker_label")

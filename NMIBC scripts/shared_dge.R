@@ -39,6 +39,20 @@
     list(nmibc_bc, nmibc_uro) %>% 
     map(~.x$cmm_significant)
   
+  ## numbers of common regulated genes 
+  
+  nmibc_shared$total_numbers[c("bc", "uromol")] <- 
+    list(nmibc_bc, nmibc_uro) %>% 
+    map(~.x$numbers) %>% 
+    map(filter, cohort == "common") %>% 
+    map2(., c("n_clust_id", "n_NMIBC_class"), 
+         ~mutate(.x, 
+                 !!.y := n)) %>% 
+    map(select, 
+        regulation, 
+        any_of(c("clust_id", "NMIBC_class", 
+                 "n_clust_id", "n_NMIBC_class")))
+  
   ## common top markers of bladder cancer clusters and UROMOL classes
   
   nmibc_shared$markers <- 
@@ -56,18 +70,26 @@
     map(~.x$entrez_id) %>% 
     reduce(union)
   
-# Jaccard distances --------
+  ## pairs of molecular subsets
   
-  insert_msg("Jaccard distances")
+  nmibc_shared$pairs <- paste0("uromol.", globals$uromol_levels) %>% 
+    map(function(x) paste0("bc.", globals$cluster_levels) %>% 
+          map(~c(.x, x))) %>% 
+    unlist(recursive = FALSE)
   
-  ## input data: vectors of simplified gene regulation information: 
-  ## the upregulate and downregulated features are appended with suffixes
+  ## input data for similarity computation: 
+  ## vectors of simplified gene regulation information: 
+  ## the upregulated and downregulated features are appended with suffixes
   
   nmibc_shared$simil_data <- nmibc_shared$genes %>% 
     map(map, ~map2(.x, names(.x), paste, sep = "|")) %>% 
     map(map, reduce, union) %>% 
     unlist(recursive = FALSE)
   
+# Jaccard distances --------
+  
+  insert_msg("Jaccard distances")
+
   ## Jaccard distances
   
   nmibc_shared$simil_test <- nmibc_shared$simil_data %>% 
@@ -102,13 +124,6 @@
   
   insert_msg("Identification of shared regulated genes")
   
-  ## pairs of molecular subsets
-  
-  nmibc_shared$pairs <- paste0("uromol.", globals$uromol_levels) %>% 
-    map(function(x) paste0("bc.", globals$cluster_levels) %>% 
-          map(~c(.x, x))) %>% 
-    unlist(recursive = FALSE)
-  
   ## common regulated features, appended with Entrez IDs
 
   nmibc_shared$shared_features <- 
@@ -135,6 +150,13 @@
   nmibc_shared$numbers <- nmibc_shared$shared_features %>% 
     count(pair_id, regulation) %>% 
     left_join(nmibc_shared$pair_df, by = "pair_id")
+  
+  ## appending with numbers of all genes regulated in particular 
+  ## molecular subsets
+  
+  nmibc_shared$numbers <- c(nmibc_shared["numbers"], 
+                            nmibc_shared$total_numbers) %>% 
+    reduce(left_join)
   
 # GO enrichment analyses for the overlaps with at least 10 genes ----------
   
@@ -283,6 +305,7 @@
   
   nmibc_shared$graph_data$markers <- nmibc_shared$shared_markers %>% 
     map(sort) %>% 
+    map(wrap_vector) %>% 
     map_chr(paste, collapse = ", ") %>% 
     compress(names_to = "pair_id", 
              values_to = "marker_label")
