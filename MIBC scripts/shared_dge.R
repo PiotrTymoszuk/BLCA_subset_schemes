@@ -50,13 +50,28 @@
         any_of(c("clust_id", "consensusClass", 
                  "n_clust_id", "n_consensusClass")))
   
-  ## top 100 markers of bladder cancer clusters and consensus classes
+  ## all and top 100 markers of bladder cancer clusters and consensus classes
   ## shared by at least three cohorts
   
   mibc_shared$markers <- 
     list(bc = mibc_bc, consensus = mibc_cons) %>% 
+    map(~.x$cmm_markers) %>% 
+    unlist(recursive = FALSE)
+  
+  mibc_shared$top_markers <- 
+    list(bc = mibc_bc, consensus = mibc_cons) %>% 
     map(~.x$cmm_top_markers) %>% 
     unlist(recursive = FALSE)
+  
+  ## non-significant differences in consensus classes: 
+  ## to be used for selection of distinct markers of the bladder cancer 
+  ## clusters
+  
+  mibc_shared$anova_ns <- mibc_cons$anova %>% 
+    map(filter, regulation == "ns") %>% 
+    map(~.x$variable) %>% 
+    shared_features(m = 4) %>% 
+    as.character
 
   ## attributes for vertices of similarity graphs
   
@@ -298,10 +313,25 @@
   
   insert_msg("Identification of overlaps in markers")
   
-  mibc_shared$shared_markers <- mibc_shared$markers %>% 
+  ## shared markers
+  
+  mibc_shared$shared_markers <- mibc_shared$top_markers %>% 
     find_overlaps(pairs = mibc_shared$pairs, as_list = TRUE) %>% 
     map(function(x) if(length(x) == 0) NULL else x) %>% 
     compact
+  
+  ## distinct markers for bladder cancer clusters #1, #2, #3, and, 
+  ## respectively, stroma-rich, basal and luminal consensus class.
+  ## additional selection step for the distinct markers: 
+  ## lacking significance in ANOVA
+  
+  mibc_shared$distinct_markers <- 
+    list(`#1` = c("bc.#1", "consensus.Stroma-rich"), 
+         `#2` = c("bc.#2", "consensus.Ba/Sq"), 
+         `#3` = c("bc.#3", "consensus.LumP")) %>% 
+    map(~setdiff(mibc_shared$markers[[.x[[1]]]], 
+                 mibc_shared$markers[[.x[[2]]]])) %>% 
+    map(intersect, mibc_shared$anova_ns)
 
 # Weighted similarity graph ---------
   
@@ -374,8 +404,8 @@
   
   mibc_shared <- 
     mibc_shared[c("simil_test", "shared_features", "numbers", 
-                  "go_test", "go_significant", 
-                  "shared_labels", "shared_markers", 
+                  "go_test", "go_significant", "shared_labels", 
+                  "shared_markers", "distinct_markers", 
                   "simil_graph")]
   
   save(mibc_shared, file = "./cache/mibc_shared.RData")

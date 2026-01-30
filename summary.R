@@ -52,8 +52,6 @@
   c("./summary scripts/figures.R") %>% 
     source_all(message = TRUE, crash = TRUE)
   
-  
-  
 # END -------
   
   insert_tail()
