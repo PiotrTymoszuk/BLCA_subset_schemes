@@ -346,7 +346,7 @@
   
   mibc_shared$graph_data$markers <- mibc_shared$shared_markers %>% 
     map(sort) %>% 
-    map(wrap_vector) %>% 
+    map(wrap_vector, len = 4) %>% 
     map_chr(paste, collapse = ", ") %>% 
     compress(names_to = "pair_id", 
              values_to = "marker_label")

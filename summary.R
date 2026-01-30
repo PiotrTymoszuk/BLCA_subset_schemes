@@ -1,5 +1,5 @@
-# Summary plots and tables to be exported to 
-# the main bladder cancer cluster project
+# Summary plots and tables to be exported to the main bladder cancer 
+# cluster project
 
 # tools ---------
 
@@ -18,6 +18,7 @@
 
   library(ggtext)
   library(figur)
+  library(cowplot)
   
   library(AnnotationDbi)
   library(org.Hs.eg.db)
@@ -39,10 +40,19 @@
   
   insert_msg("Analysis scripts")
   
+  ## plots 
+  
   c("./summary scripts/dge_plots.R", 
     "./summary scripts/graph_plots.R", 
     "./summary scripts/venn_plots.R") %>% 
     source_all(message = TRUE, crash = TRUE)
+  
+  ## figures and tables
+  
+  c("./summary scripts/figures.R") %>% 
+    source_all(message = TRUE, crash = TRUE)
+  
+  
   
 # END -------
   

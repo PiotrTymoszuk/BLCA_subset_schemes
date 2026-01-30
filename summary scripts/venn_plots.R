@@ -18,6 +18,10 @@
     list(nmibc = nmibc_shared, mibc = mibc_shared) %>% 
     map(~.x$numbers)
   
+  sum_veplots$numbers$mibc <- sum_veplots$numbers$mibc %>% 
+    mutate(consensusClass = fct_recode(consensusClass, 
+                                       `Stroma\nrich` = "Stroma-rich"))
+  
   ## verbose labels for the intersecting genes derived from 
   ## GO enrichment analyses
   
@@ -40,7 +44,12 @@
          inter_n_var = "n", 
          set1_label = "clust_id", 
          suffix_label = "regulation", 
-         plot_names = "pair_id")
+         plot_names = "pair_id") %>% 
+    map(map,
+        ~.x + 
+          labs(title = .x$labels$title %>% 
+                 stri_replace(fixed = "\n", replacement = "-") %>% 
+                 paste0(", genes")))
   
 # appending the plots with text labels --------
   
@@ -54,8 +63,9 @@
                          sum_veplots$go_labels[[i]], 
                          sep = "\n\n")) %>% 
       pmap(euler_add_label, 
-           x_offset = 2.5) %>% 
-      map(~.x + expand_limits(x = 40))
+           x_offset = 6, 
+           txt_size = 2.5) %>% 
+      map(~.x + expand_limits(x = 72))
     
   }
 

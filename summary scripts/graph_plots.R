@@ -172,32 +172,22 @@
          plot_title = toupper(names(sum_gplots$graph_obj))) %>% 
     pmap(plot, 
          layout = layout.fruchterman.reingold, 
-         vertex_fill_variable = "system", 
-         vertex_color_variable = NULL, 
-         vertex_shape_variable = "system", 
-         vertex_color = "black", 
-         vertex_size = 4, 
-         vertex_alpha = 2, 
+         vertex_color = NA, 
          label_vertices = FALSE, 
          weighting_order = 1, 
          cust_theme = globals$net_theme + 
            theme(plot.subtitle = element_blank()), 
          seed = 1324) %>% 
     map(~.x + 
-          geom_nodelabel_repel(aes(label = name, 
-                                   fill = system), 
-                               size = 3, 
-                               fontface = "bold", 
-                               box.padding = unit(0.35, "lines"),
-                               label.padding = unit(0.15, "lines"), 
-                               force = 2, 
-                               show.legend = FALSE) + 
+          geom_nodelabel(aes(label = sub_label, 
+                             fill = system), 
+                         size = 3, 
+                         fontface = "bold", 
+                         label.padding = unit(0.15, "lines"), 
+                         show.legend = FALSE) + 
           scale_fill_manual(values = globals$system_colors, 
                             labels = globals$system_labels, 
                             name = "classification\nsystem") + 
-          scale_shape_manual(values = globals$system_shapes, 
-                             labels = globals$system_labels, 
-                             name = "classification\nsystem") + 
           scale_linewidth(limits = c(0, 0.4), 
                           range = c(0.15, 2), 
                           name = "similarity, J") + 
@@ -216,7 +206,7 @@
                                                    edge_lab, NA)), 
                                 color = "plum4", 
                                 size = 2.5, 
-                                box.padding = unit(3, "lines"),
+                                box.padding = unit(2, "lines"),
                                 label.padding = unit(0.1, "lines"), 
                                 label.size = 0.1, 
                                 force = 4, 

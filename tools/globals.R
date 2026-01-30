@@ -215,6 +215,8 @@
              globals$system_levels, 
              ~tibble(name = .x, 
                      system = .y)) %>% 
-    mutate(system = factor(system, globals$system_levels))
+    mutate(system = factor(system, globals$system_levels), 
+           sub_label = fct_recode(name, 
+                                  `Stroma\nrich` = "Stroma-rich"))
   
 # END ---------
