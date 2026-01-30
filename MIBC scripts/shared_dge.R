@@ -161,7 +161,7 @@
                                              pattern = ".", 
                                              simplify = TRUE)[, 2], 
            consensusClass = factor(consensusClass, 
-                                   globals$uromol_levels))
+                                   globals$consensus_levels))
 
 # Numbers of genes in the intersections ---------
   

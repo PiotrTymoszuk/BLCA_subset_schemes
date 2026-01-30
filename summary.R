@@ -44,13 +44,22 @@
   
   c("./summary scripts/dge_plots.R", 
     "./summary scripts/graph_plots.R", 
-    "./summary scripts/venn_plots.R") %>% 
+    "./summary scripts/venn_plots.R", 
+    "./summary scripts/text_plots.R") %>% 
     source_all(message = TRUE, crash = TRUE)
   
   ## figures and tables
   
-  c("./summary scripts/figures.R") %>% 
+  c("./summary scripts/figures.R", 
+    "./summary scripts/tables.R") %>% 
     source_all(message = TRUE, crash = TRUE)
+  
+# exports --------
+  
+  insert_msg("Exports")
+  
+  save(sum_figs, file = "./exports/sum_figs.RData")
+  save(sum_tabs, file = "./exports/sum_tabs.RData")
   
 # END -------
   

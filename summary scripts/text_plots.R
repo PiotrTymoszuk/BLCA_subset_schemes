@@ -11,7 +11,7 @@
   
   insert_msg("The plotting data")
   
-  ## a data frame with pair IDs and molecular subsets
+  ## data frames with pair IDs and molecular subsets
   ## used later in formatting of GO enrichment and gene counting results
   
   sum_teplots$pair_df <- 

@@ -11,9 +11,9 @@
   
   sum_figs <- list()
   
-# figures ---------
+# figures for similarity of the molecular subsets---------
   
-  insert_msg("Figures")
+  insert_msg("Figures for similarity of the subsets")
   
   ## upper panel: similarity and shared markers: 
   ## graph plots
