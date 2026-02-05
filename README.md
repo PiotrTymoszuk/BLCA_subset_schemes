@@ -4,7 +4,7 @@ _Transcriptomic similarity and dissimilarity between molecular subset schemes in
 
 ## Summary
 
-This repository contains R code for a comparison of transcriptomes differentially regulated in our novel bladder cancer clusters (see: [repository with with clustering and phenotyping pipelines](https://github.com/PiotrTymoszuk/BLCA-cluster-paper) and [repository with interactive supplementary material](https://github.com/PiotrTymoszuk/BLCA_cluster_supplements/edit/main/README.md)), UROMOL classes of non-muscle invasive bladder cancer (NMIBC) by Hedegard et al. (DOI: 10.1016/j.ccell.2016.05.004), and consensus classes of muscle invasive bladder cancer (MIBC) by Kamoun et al. (DOI: 10.1016/J.EURURO.2019.09.006). 
+This repository contains R code for a comparison of transcriptomes differentially regulated in our novel bladder cancer clusters (see: [repository with with clustering and phenotyping pipelines](https://github.com/PiotrTymoszuk/BLCA-cluster-paper) and [repository with interactive supplementary material](https://github.com/PiotrTymoszuk/BLCA_cluster_supplements)), UROMOL classes of non-muscle invasive bladder cancer (NMIBC) by Hedegard et al. (DOI: 10.1016/j.ccell.2016.05.004), and consensus classes of muscle invasive bladder cancer (MIBC) by Kamoun et al. (DOI: 10.1016/J.EURURO.2019.09.006). 
 
 ## Terms of use 
 
